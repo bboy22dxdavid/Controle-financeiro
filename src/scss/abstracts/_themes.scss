@@ -1,0 +1,15 @@
+// Tokens CSS para componentes que precisem de valores em tempo de execucao.
+:root {
+  --bg-principal: #{$body-bg};
+  --texto-principal: #{$body-color};
+  --cor-marca: #{$success};
+  --borda-card: #{$border-color};
+}
+
+[data-bs-theme="dark"] {
+  --bg-principal: #121212;
+  --texto-principal: #f8f9fa;
+  --cor-marca: #8ebca4;
+  --borda-card: #323539;
+}
+

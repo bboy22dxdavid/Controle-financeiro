@@ -1,0 +1,445 @@
+<main class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#overview" aria-label="NiLL's, início" (click)="showOverview()">
+      <span class="brand-mark" aria-hidden="true">n</span><span>NiLL's<span class="brand-period">.</span></span>
+    </a>
+
+    <div class="family-switcher">
+      <span class="family-icon" aria-hidden="true">{{ initials(data.family.name) }}</span>
+      <span class="family-copy"><strong>{{ data.family.name }}</strong><small>Plano familiar</small></span>
+      <span class="switch-chevron" aria-hidden="true">⌄</span>
+    </div>
+
+    <p class="nav-label">ESPAÇO DA FAMÍLIA</p>
+    <nav class="nav-list" aria-label="Navegação principal">
+      <a class="nav-link" [class.is-active]="activeView === 'overview'" href="#overview" (click)="showOverview()"><span aria-hidden="true">◫</span>Visão geral</a>
+      <a class="nav-link" [class.is-active]="activeView === 'transactions'" href="#transactions" (click)="showTransactions()"><span aria-hidden="true">⇄</span>Lançamentos</a>
+      <a class="nav-link" [class.is-active]="activeView === 'budgets'" href="#planning" (click)="showBudgets()"><span aria-hidden="true">▤</span>Orçamento</a>
+      <a class="nav-link" [class.is-active]="activeView === 'goals'" href="#goals" (click)="showGoals()"><span aria-hidden="true">◎</span>Metas da família</a>
+    </nav>
+
+    <div class="sidebar-note">
+      <span class="note-icon" aria-hidden="true">✳</span>
+      <strong>Dinheiro em família,<br>planos em comum.</strong>
+      <span>Pequenos passos, grandes conquistas.</span>
+    </div>
+
+    <div class="profile-row">
+      <span class="avatar avatar-ana">{{ initials(data.family.memberName) }}</span>
+      <span class="profile-copy"><strong>{{ data.family.memberName }}</strong><small>Perfil familiar</small></span>
+      <button class="more-button" type="button" aria-label="Editar perfil familiar" (click)="openProfileModal()">···</button>
+    </div>
+  </aside>
+
+  <section class="main-content" id="overview">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">{{ today }}</p>
+        @if (activeView === 'overview') {
+          <h1>O dinheiro da família, <span>em harmonia.</span></h1>
+          <p class="page-intro">Um retrato simples dos planos que vocês estão construindo juntos.</p>
+        } @else if (activeView === 'transactions') {
+          <h1>Lançamentos <span>da família.</span></h1>
+          <p class="page-intro">Acompanhe todas as entradas e despesas registradas.</p>
+        } @else if (activeView === 'budgets') {
+          <h1>Orçamento <span>familiar.</span></h1>
+          <p class="page-intro">Acompanhe limites e despesas por categoria.</p>
+        } @else {
+          <h1>Metas <span>da família.</span></h1>
+          <p class="page-intro">Veja o progresso dos planos que vocês estão construindo juntos.</p>
+        }
+      </div>
+      <div class="topbar-actions">
+        <div class="user-switcher">
+          <button class="user-switcher-trigger" type="button" [attr.aria-expanded]="isUserPickerOpen" aria-haspopup="menu" [attr.aria-label]="'Usuário atual: ' + data.family.memberName + '. Selecionar usuário'" (click)="isUserPickerOpen = !isUserPickerOpen">
+            <span class="member-stack" aria-hidden="true">
+              @for (member of registeredUsers; track member; let index = $index) {
+                <span class="avatar" [class.avatar-ana]="index % 3 === 0" [class.avatar-rafael]="index % 3 === 1" [class.avatar-lia]="index % 3 === 2">{{ initials(member) }}</span>
+              }
+            </span>
+            <span class="active-user-label">{{ data.family.memberName }}</span><span class="user-switch-chevron" aria-hidden="true">⌄</span>
+          </button>
+          @if (isUserPickerOpen) {
+            <div class="user-picker-menu" role="menu" aria-label="Selecionar usuário">
+              <span class="user-picker-heading">Usuário ativo</span>
+              @for (member of registeredUsers; track member) {
+                <button type="button" role="menuitem" [class.is-current]="member === data.family.memberName" (click)="switchUser(member)">
+                  <span class="avatar">{{ initials(member) }}</span><span>{{ member }}</span>
+                  @if (member === data.family.memberName) { <span class="user-current-label">Atual</span> }
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <button class="button button-primary" type="button" (click)="openTransactionModal()"><span aria-hidden="true">＋</span> Novo lançamento</button>
+      </div>
+    </header>
+
+    @if (activeView === 'overview') {
+    <section class="overview-section" aria-label="Resumo financeiro do mês">
+      <div class="section-kicker"><span>{{ monthLabel }}</span><span class="live-status" [class.is-offline]="!isSynced"><i></i> {{ syncStatusLabel }}</span></div>
+      <div class="summary-grid">
+        <article class="summary-card balance-card">
+          <div class="summary-topline"><span>Saldo da família</span><span class="summary-symbol" aria-hidden="true">↗</span></div>
+          <strong class="balance-value">{{ formatCurrency(balance) }}</strong>
+          <span class="summary-caption">Disponível neste mês</span>
+          <div class="balance-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </article>
+        <article class="summary-card income-card">
+          <div class="summary-topline"><span>Entradas</span><button class="stat-icon income-icon income-add-button" type="button" aria-label="Adicionar receita" title="Adicionar receita" (click)="openIncomeModal()">＋</button></div>
+          <strong>{{ formatCurrency(income) }}</strong>
+          <span class="summary-caption">Receitas registradas</span>
+          <span class="card-accent income-accent"></span>
+        </article>
+        <article class="summary-card expense-card">
+          <div class="summary-topline"><span>Despesas</span><span class="stat-icon expense-icon" aria-hidden="true">↗</span></div>
+          <strong>{{ formatCurrency(expenses) }}</strong>
+          <span class="summary-caption">{{ formatCurrency(budgetRemaining) }} do orçamento restante</span>
+          <span class="card-accent expense-accent"></span>
+        </article>
+      </div>
+    </section>
+
+    <div class="dashboard-grid">
+      <section class="panel budget-panel" id="planning">
+        <div class="panel-heading">
+          <div><p class="eyebrow">PLANEJAMENTO DO MÊS</p><h2>Para onde vai o dinheiro</h2></div>
+          <button class="quiet-button" type="button" (click)="openBudgetModal()" aria-label="Adicionar orçamento">＋ Orçamento</button>
+        </div>
+        <p class="panel-description">Defina limites mensais por categoria e acompanhe os gastos.</p>
+
+        <div class="budget-total">
+          <div><span>Despesas mensais</span><strong>{{ formatCurrency(expenses) }}</strong></div>
+          <div><span>Orçamento restante</span><strong>{{ formatCurrency(budgetRemaining) }}</strong></div>
+          <span class="budget-usage">{{ budgetUsagePercent }}% utilizado</span>
+        </div>
+        <div class="budget-track" role="progressbar" [attr.aria-valuenow]="budgetUsageBarWidth" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="budgetUsagePercent + '% do orçamento utilizado'" aria-label="Uso do orçamento mensal">
+          <span class="budget-total-progress" [class.is-over-budget]="budgetUsagePercent > 100" [style.width.%]="budgetUsageBarWidth"></span>
+        </div>
+
+        <div class="budget-list">
+          @for (budget of budgets; track budget.id) {
+            <article class="budget-row">
+              <span [class]="'budget-dot ' + budget.color"></span>
+              <div class="budget-name"><strong>{{ budget.category }}</strong><small>Limite mensal</small></div>
+              <div class="budget-amount">
+                <strong>{{ formatCurrency(budget.spent) }}</strong>
+                <small>de {{ formatCurrency(budget.limit) }}</small>
+                <span [class]="'budget-progress-track ' + budget.color" role="progressbar" [attr.aria-valuenow]="budgetProgress(budget)" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Orçamento de ' + budget.category + ': ' + budgetProgress(budget) + '% utilizado'">
+                  <span [class]="'budget-progress-fill ' + budget.color" [style.width.%]="budgetProgress(budget)"></span>
+                </span>
+              </div>
+              <span class="budget-share">{{ budget.share }}</span>
+              <button class="icon-button" type="button" [attr.aria-label]="'Remover orçamento de ' + budget.category" (click)="removeBudget(budget.id)">×</button>
+            </article>
+          }
+          @if (budgets.length === 0) {
+            <p class="empty-state">Adicione limites por categoria para começar seu planejamento.</p>
+          }
+        </div>
+      </section>
+
+      <section class="panel goal-panel" id="goals">
+        <div class="panel-heading">
+          <div><p class="eyebrow">UM PLANO EM COMUM</p><h2>Sonhos da família</h2></div>
+          <button class="icon-button add-goal-button" type="button" aria-label="Adicionar meta" (click)="openGoalModal()">＋</button>
+        </div>
+        @if (goals.length === 0) {
+          <div class="goal-illustration" aria-hidden="true"><span class="sun"></span><span class="hill hill-back"></span><span class="hill hill-front"></span><span class="goal-flag">✦</span></div>
+          <p class="empty-state">Crie uma meta para acompanhar os planos da família.</p>
+        }
+        @for (goal of goals; track goal.id) {
+          <article class="goal-item">
+            <div class="goal-item-heading"><span class="goal-label">META DA FAMÍLIA</span><button class="icon-button" type="button" [attr.aria-label]="'Remover meta ' + goal.name" (click)="removeGoal(goal.id)">×</button></div>
+            <h3>{{ goal.name }}</h3>
+            <div class="goal-values"><strong>{{ formatCurrency(goal.saved) }}</strong><span>de {{ formatCurrency(goal.target) }}</span></div>
+            <div class="goal-track" role="progressbar" [attr.aria-valuenow]="goalProgress(goal)" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Meta ' + goal.name + ' concluída em ' + goalProgress(goal) + '%'">
+              <span [style.width.%]="goalProgress(goal)"></span>
+            </div>
+            <div class="goal-footer"><span>{{ goalProgress(goal) }}% da meta alcançada</span><span>Até {{ formatDate(goal.dueDate) }}</span></div>
+            <button class="quiet-button contribution-button" type="button" [disabled]="goalRemaining(goal) === 0" (click)="openGoalContributionModal(goal)">{{ goalRemaining(goal) === 0 ? 'Meta atingida' : '＋ Adicionar valor' }}</button>
+          </article>
+        }
+      </section>
+    </div>
+    }
+
+    @if (activeView === 'overview') {
+    <section class="panel transactions-panel" id="transactions">
+      <div class="panel-heading transactions-heading">
+        <div><p class="eyebrow">MOVIMENTAÇÕES DA CASA</p><h2>Últimos lançamentos</h2></div>
+        <button class="quiet-button" type="button" (click)="openTransactionModal()">Adicionar <span aria-hidden="true">＋</span></button>
+      </div>
+      <div class="transaction-table">
+        <div class="table-header"><span>DESCRIÇÃO</span><span>CATEGORIA</span><span>QUEM REGISTROU</span><span class="align-right">VALOR</span></div>
+          @for (transaction of transactions; track transaction.id) {
+          <article class="transaction-row">
+            <div class="transaction-title"><span class="transaction-mark" [class.mark-income]="transaction.type === 'income'" aria-hidden="true">{{ transaction.type === 'income' ? '↙' : '↗' }}</span><span><strong>{{ transaction.description }}</strong><small>{{ formatDate(transaction.date) }}</small></span></div>
+            <span class="transaction-category">{{ transaction.category }}</span>
+            <span class="transaction-member"><span class="mini-avatar">{{ initials(transaction.member) }}</span>{{ transaction.member }}</span>
+            <div class="transaction-value"><strong class="transaction-amount" [class.amount-income]="transaction.type === 'income'">{{ transaction.type === 'income' ? '+' : '−' }} {{ formatCurrency(transaction.amount) }}</strong><button class="icon-button" type="button" [attr.aria-label]="'Remover lançamento ' + transaction.description" (click)="removeTransaction(transaction.id)">×</button></div>
+          </article>
+        }
+          @if (transactions.length === 0) {
+            <p class="empty-state transactions-empty">Nenhum lançamento ainda. Use “Novo lançamento” para registrar o primeiro.</p>
+          }
+      </div>
+      <footer class="panel-footer"><span class="live-status"><i></i> {{ data.family.name }} · {{ data.family.memberName }}</span><span>Cache local habilitado</span></footer>
+    </section>
+    } @else if (activeView === 'transactions') {
+      <section class="transactions-page" id="transactions">
+        <div class="transactions-toolbar">
+          <div class="transaction-filters" aria-label="Filtros de lançamentos">
+            <label class="filter-field">Usuário
+              <select name="transactionMember" [(ngModel)]="selectedTransactionMember">
+                <option value="all">Todos os usuários</option>
+                @for (member of transactionMembers; track member) {
+                  <option [value]="member">{{ member }}</option>
+                }
+              </select>
+            </label>
+            <label class="filter-field">Período
+              <select name="transactionMonth" [(ngModel)]="selectedTransactionMonth">
+                <option value="all">Todos os meses</option>
+                @for (month of transactionMonths; track month) {
+                  <option [value]="month">{{ formatMonth(month) }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <aside class="transactions-total" aria-live="polite">
+            <span>Total exibido</span>
+            <strong>{{ formatCurrency(filteredTransactionTotal) }}</strong>
+            <small>{{ filteredTransactions.length }} {{ filteredTransactions.length === 1 ? 'despesa' : 'despesas' }}</small>
+          </aside>
+        </div>
+
+        <section class="panel transactions-panel launches-panel" aria-label="Despesas da família">
+          <div class="panel-heading transactions-heading">
+            <div><p class="eyebrow">MOVIMENTAÇÕES DA CASA</p><h2>Despesas registradas</h2></div>
+            <button class="quiet-button" type="button" (click)="openTransactionModal()">Adicionar <span aria-hidden="true">＋</span></button>
+          </div>
+          <div class="transaction-table launches-table">
+            <div class="table-header"><span>DESCRIÇÃO</span><span>CATEGORIA</span><span>TIPO</span><span>QUEM REGISTROU</span><span class="align-right">VALOR</span></div>
+            @for (transaction of filteredTransactions; track transaction.id) {
+              <article class="transaction-row">
+                <div class="transaction-title"><span class="transaction-mark" [class.mark-income]="transaction.type === 'income'" aria-hidden="true">{{ transaction.type === 'income' ? '↙' : '↗' }}</span><span><strong>{{ transaction.description }}</strong><small>{{ formatDate(transaction.date) }}</small></span></div>
+                <span class="transaction-category">{{ transaction.category }}</span>
+                <span class="transaction-kind" [class.kind-income]="transaction.type === 'income'">{{ transaction.type === 'income' ? 'Receita' : 'Despesa' }}</span>
+                <span class="transaction-member"><span class="mini-avatar">{{ initials(transaction.member) }}</span>{{ transaction.member }}</span>
+                <div class="transaction-value"><strong class="transaction-amount" [class.amount-income]="transaction.type === 'income'">{{ transaction.type === 'income' ? '+' : '−' }} {{ formatCurrency(transaction.amount) }}</strong><button class="icon-button" type="button" [attr.aria-label]="'Remover lançamento ' + transaction.description" (click)="removeTransaction(transaction.id)">×</button></div>
+              </article>
+            }
+            @if (filteredTransactions.length === 0) {
+              <p class="empty-state transactions-empty">Nenhuma despesa encontrada para os filtros selecionados.</p>
+            }
+          </div>
+          <footer class="panel-footer"><span class="live-status"><i></i> {{ data.family.name }}</span><span>Cache local habilitado</span></footer>
+        </section>
+      </section>
+    } @else if (activeView === 'budgets') {
+      <section class="transactions-page management-page" id="planning">
+        <div class="transactions-toolbar">
+          <div class="transaction-filters" aria-label="Filtros de orçamento">
+            <label class="filter-field">Usuário
+              <select name="budgetMember" [(ngModel)]="selectedBudgetMember">
+                <option value="all">Todos os usuários</option>
+                @for (member of budgetMembers; track member) {
+                  <option [value]="member">{{ member }}</option>
+                }
+              </select>
+            </label>
+            <label class="filter-field">Período
+              <select name="budgetMonth" [ngModel]="selectedBudgetMonth" (ngModelChange)="onBudgetMonthChange($event)">
+                <option value="all">Todos os meses</option>
+                @for (month of budgetMonths; track month) {
+                  <option [value]="month">{{ formatMonth(month) }}</option>
+                }
+              </select>
+            </label>
+            <label class="filter-field">Categoria
+              <select name="budgetCategoryFilter" [(ngModel)]="selectedBudgetCategory">
+                <option value="all">Todas as categorias</option>
+                @for (category of budgetCategories; track category) {
+                  <option [value]="category">{{ category }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <aside class="transactions-total" aria-live="polite">
+            <span>Orçamento cadastrado</span>
+            <strong>{{ formatCurrency(filteredBudgetLimitTotal) }}</strong>
+            <small>{{ filteredBudgetRows.length }} {{ filteredBudgetRows.length === 1 ? 'orçamento' : 'orçamentos' }}</small>
+          </aside>
+        </div>
+
+        <section class="panel transactions-panel launches-panel" aria-label="Orçamentos cadastrados">
+          <div class="panel-heading transactions-heading">
+            <div><p class="eyebrow">PLANEJAMENTO DA FAMÍLIA</p><h2>Orçamentos cadastrados</h2></div>
+            <button class="quiet-button" type="button" (click)="openBudgetModal()">Adicionar orçamento <span aria-hidden="true">＋</span></button>
+          </div>
+          <div class="management-table budget-management-table">
+            <div class="management-header"><span>CATEGORIA</span><span>USUÁRIO</span><span>PERÍODO</span><span class="align-right">LIMITE</span><span class="align-right">GASTO</span><span>UTILIZAÇÃO</span><span class="align-right">AÇÕES</span></div>
+            @for (budget of filteredBudgetRows; track budget.id) {
+              <article class="management-row budget-management-row">
+                <strong class="management-primary">{{ budget.category }}</strong>
+                <span class="management-muted">{{ budget.member }}</span>
+                <span class="management-muted">{{ formatMonth(budget.month) }}</span>
+                <strong class="management-number">{{ formatCurrency(budget.limit) }}</strong>
+                <strong class="management-number" [class.is-over-limit]="budget.spent > budget.limit">{{ formatCurrency(budget.spent) }}</strong>
+                <div class="management-progress-cell">
+                  <span class="management-progress-track" role="progressbar" [attr.aria-valuenow]="budgetProgress(budget)" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Orçamento de ' + budget.category + ': ' + budgetProgress(budget) + '% utilizado'">
+                    <span [class.is-over-limit]="budget.spent > budget.limit" [style.width.%]="budgetProgress(budget)"></span>
+                  </span>
+                  <small [class.is-over-limit]="budget.spent > budget.limit">{{ budgetUsage(budget) }}%</small>
+                </div>
+                <button class="icon-button" type="button" [attr.aria-label]="'Remover orçamento de ' + budget.category" (click)="removeBudget(budget.id)">×</button>
+              </article>
+            }
+            @if (filteredBudgetRows.length === 0) {
+              <p class="empty-state transactions-empty">Nenhum orçamento cadastrado para os filtros selecionados.</p>
+            }
+          </div>
+          <footer class="panel-footer"><span class="live-status"><i></i> {{ data.family.name }}</span><span>Cache local habilitado</span></footer>
+        </section>
+      </section>
+    } @else {
+      <section class="transactions-page management-page" id="goals">
+        <div class="transactions-toolbar">
+          <div class="transaction-filters" aria-label="Filtros de metas">
+            <label class="filter-field">Prazo
+              <select name="goalMonth" [(ngModel)]="selectedGoalMonth">
+                <option value="all">Todos os prazos</option>
+                @for (month of goalMonths; track month) {
+                  <option [value]="month">{{ formatMonth(month) }}</option>
+                }
+              </select>
+            </label>
+            <label class="filter-field">Usuário
+              <select name="goalMember" [(ngModel)]="selectedGoalMember">
+                <option value="all">Todos os usuários</option>
+                @for (member of goalDepositMembers; track member) {
+                  <option [value]="member">{{ member }}</option>
+                }
+              </select>
+            </label>
+            <label class="filter-field">Situação
+              <select name="goalStatus" [(ngModel)]="selectedGoalStatus">
+                <option value="all">Todas as metas</option>
+                <option value="active">Em andamento</option>
+                <option value="completed">Concluídas</option>
+              </select>
+            </label>
+          </div>
+          <aside class="transactions-total" aria-live="polite">
+            <span>Valor guardado</span>
+            <strong>{{ formatCurrency(filteredGoalTotal) }}</strong>
+            <small>{{ filteredGoals.length }} {{ filteredGoals.length === 1 ? 'meta' : 'metas' }}</small>
+          </aside>
+        </div>
+
+        <section class="panel transactions-panel launches-panel" aria-label="Metas da família">
+          <div class="panel-heading transactions-heading">
+            <div><p class="eyebrow">PLANOS EM COMUM</p><h2>Metas da família</h2></div>
+            <button class="quiet-button" type="button" (click)="openGoalModal()">Adicionar <span aria-hidden="true">＋</span></button>
+          </div>
+          <div class="management-table goal-management-table">
+            <div class="management-header"><span>META</span><span>PRAZO</span><span class="align-right">DEPOSITADO</span><span class="align-right">OBJETIVO</span><span>PROGRESSO</span><span class="align-right">AÇÕES</span></div>
+            @for (goal of filteredGoals; track goal.id) {
+              <article class="management-row goal-management-row">
+                <strong class="management-primary">{{ goal.name }}</strong>
+                <span class="management-muted">{{ formatFullDate(goal.dueDate) }}</span>
+                <strong class="management-number">{{ formatCurrency(goal.depositedAmount) }}</strong>
+                <strong class="management-number">{{ formatCurrency(goal.target) }}</strong>
+                <div class="management-progress-cell">
+                  <span class="management-progress-track" role="progressbar" [attr.aria-valuenow]="goalProgress(goal)" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Meta ' + goal.name + ': ' + goalProgress(goal) + '% concluída'">
+                    <span [class.is-complete]="goalProgress(goal) === 100" [style.width.%]="goalProgress(goal)"></span>
+                  </span>
+                  <small>{{ goalProgress(goal) }}%</small>
+                </div>
+                <div class="management-actions">
+                  <button class="icon-button" type="button" [disabled]="goalRemaining(goal) === 0" [attr.aria-label]="'Adicionar valor à meta ' + goal.name" (click)="openGoalContributionModal(goal)">＋</button>
+                  <button class="icon-button" type="button" [attr.aria-label]="'Remover meta ' + goal.name" (click)="removeGoal(goal.id)">×</button>
+                </div>
+              </article>
+            }
+            @if (filteredGoals.length === 0) {
+              <p class="empty-state transactions-empty">Nenhuma meta encontrada para os filtros selecionados.</p>
+            }
+          </div>
+          <footer class="panel-footer"><span class="live-status"><i></i> {{ data.family.name }}</span><span>Cache local habilitado</span></footer>
+        </section>
+      </section>
+    }
+  </section>
+</main>
+
+@if (isTransactionModalOpen) {
+  <div class="modal-backdrop" (mousedown)="startModalBackdropClick($event)" (click)="closeModalFromBackdrop($event, 'transaction')">
+    <section class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">{{ data.family.name }}</p><h2 id="modal-title">{{ draftTransaction.type === 'income' ? 'Nova receita' : 'Nova despesa' }}</h2></div><button class="modal-close" type="button" aria-label="Fechar" (click)="closeTransactionModal()">×</button></div>
+      <form (ngSubmit)="addTransaction()">
+        <fieldset class="type-selector"><legend>Tipo de lançamento</legend><label [class.is-selected]="draftTransaction.type === 'expense'"><input type="radio" name="type" value="expense" [(ngModel)]="draftTransaction.type"> Despesa</label><label [class.is-selected]="draftTransaction.type === 'income'"><input type="radio" name="type" value="income" [(ngModel)]="draftTransaction.type"> Receita</label></fieldset>
+        <label class="form-field">Descrição<input name="description" [(ngModel)]="draftTransaction.description" [placeholder]="draftTransaction.type === 'income' ? 'Ex.: Salário ou renda extra' : 'Ex.: Compra do mercado'" required maxlength="60"></label>
+        <div class="form-row"><label class="form-field">Valor (R$)<input name="amount" type="number" [(ngModel)]="draftTransaction.amount" min="0.01" step="0.01" placeholder="0,00" required></label><label class="form-field">Categoria<input name="category" [(ngModel)]="draftTransaction.category" list="category-list" placeholder="Ex.: Moradia" required><datalist id="category-list">@for (category of categories; track category) {<option [value]="category"></option>}</datalist></label></div>
+        <label class="form-field">Data<input name="date" type="date" [(ngModel)]="draftTransaction.date" required></label>
+        <p class="form-note">As alterações são guardadas localmente e enviadas ao servidor quando disponível.</p>
+        <div class="modal-actions"><button class="button button-secondary" type="button" (click)="closeTransactionModal()">Cancelar</button><button class="button button-primary" type="submit">{{ draftTransaction.type === 'income' ? 'Salvar receita' : 'Salvar despesa' }}</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (isBudgetModalOpen) {
+  <div class="modal-backdrop" (mousedown)="startModalBackdropClick($event)" (click)="closeModalFromBackdrop($event, 'budget')">
+    <section class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">PLANEJAMENTO MENSAL</p><h2 id="budget-modal-title">Novo orçamento</h2></div><button class="modal-close" type="button" aria-label="Fechar" (click)="isBudgetModalOpen = false">×</button></div>
+      <form (ngSubmit)="addBudget()">
+        <label class="form-field">Categoria<input name="budgetCategory" [(ngModel)]="draftBudget.category" list="category-list" placeholder="Ex.: Moradia" required></label>
+        <label class="form-field">Limite mensal (R$)<input name="budgetLimit" type="number" [(ngModel)]="draftBudget.limit" min="0.01" step="0.01" placeholder="0,00" required></label>
+        <div class="modal-actions"><button class="button button-secondary" type="button" (click)="isBudgetModalOpen = false">Cancelar</button><button class="button button-primary" type="submit">Salvar orçamento</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (isGoalModalOpen) {
+  <div class="modal-backdrop" (mousedown)="startModalBackdropClick($event)" (click)="closeModalFromBackdrop($event, 'goal')">
+    <section class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">PLANO EM COMUM</p><h2 id="goal-modal-title">Nova meta</h2></div><button class="modal-close" type="button" aria-label="Fechar" (click)="isGoalModalOpen = false">×</button></div>
+      <form (ngSubmit)="addGoal()">
+        <label class="form-field">Nome da meta<input name="goalName" [(ngModel)]="draftGoal.name" placeholder="Ex.: Viagem em família" maxlength="60" required></label>
+        <div class="form-row"><label class="form-field">Valor alvo (R$)<input name="goalTarget" type="number" [(ngModel)]="draftGoal.target" min="0.01" step="0.01" placeholder="0,00" required></label><label class="form-field">Já economizado (R$)<input name="goalSaved" type="number" [(ngModel)]="draftGoal.saved" min="0" step="0.01" placeholder="0,00"></label></div>
+        <label class="form-field">Data limite<input name="goalDueDate" type="date" [(ngModel)]="draftGoal.dueDate" required></label>
+        <div class="modal-actions"><button class="button button-secondary" type="button" (click)="isGoalModalOpen = false">Cancelar</button><button class="button button-primary" type="submit">Salvar meta</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (isGoalContributionModalOpen && selectedGoal; as goal) {
+  <div class="modal-backdrop" (mousedown)="startModalBackdropClick($event)" (click)="closeModalFromBackdrop($event, 'contribution')">
+    <section class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="goal-contribution-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">{{ goal.name }}</p><h2 id="goal-contribution-title">Adicionar valor à meta</h2></div><button class="modal-close" type="button" aria-label="Fechar" (click)="closeGoalContributionModal()">×</button></div>
+      <form (ngSubmit)="addGoalContribution()">
+        <p class="contribution-remaining">Faltam <strong>{{ formatCurrency(goalRemaining(goal)) }}</strong> para atingir esta meta.</p>
+        <label class="form-field">Valor da contribuição (R$)<input name="contributionAmount" type="number" [(ngModel)]="draftContribution" min="0.01" [max]="goalRemaining(goal)" step="0.01" placeholder="0,00" required></label>
+        <p class="form-note">O valor será somado ao total economizado nesta meta.</p>
+        <div class="modal-actions"><button class="button button-secondary" type="button" (click)="closeGoalContributionModal()">Cancelar</button><button class="button button-primary" type="submit" [disabled]="draftContribution <= 0 || draftContribution > goalRemaining(goal)">Adicionar valor</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (isProfileModalOpen) {
+  <div class="modal-backdrop" (mousedown)="startModalBackdropClick($event)" (click)="closeModalFromBackdrop($event, 'profile')">
+    <section class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">SEU ESPAÇO FINANCEIRO</p><h2 id="profile-modal-title">Perfil familiar</h2></div><button class="modal-close" type="button" aria-label="Fechar" (click)="isProfileModalOpen = false">×</button></div>
+      <form (ngSubmit)="saveProfile()">
+        <label class="form-field">Nome da família<input name="familyName" [(ngModel)]="draftFamily.name" maxlength="60" required></label>
+        <label class="form-field">Seu nome<input name="memberName" [(ngModel)]="draftFamily.memberName" maxlength="60" required></label>
+        <div class="modal-actions"><button class="button button-secondary" type="button" (click)="isProfileModalOpen = false">Cancelar</button><button class="button button-primary" type="submit">Salvar perfil</button></div>
+      </form>
+    </section>
+  </div>
+}

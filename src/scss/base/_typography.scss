@@ -1,0 +1,45 @@
+//Fontes e títulos globais
+// scss/base/_typography.scss
+
+// Define a família de fontes e a base de leitura
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1rem;       // Equivalente a 16px por padrão
+  line-height: 1.5;      // Altura de linha confortável para leitura
+  font-weight: 400;      // Peso regular
+}
+
+// Escala de Títulos (Headings) - Hierarquia Clara
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 700;      // Títulos em negrito
+  line-height: 1.2;
+  color: $primary;       // Todos os títulos herdam a cor --ink
+}
+
+h1 { font-size: 2.5rem; }   // ~40px
+h2 { font-size: 2rem; }     // ~32px
+h3 { font-size: 1.75rem; }  // ~28px
+h4 { font-size: 1.5rem; }   // ~24px
+h5 { font-size: 1.25rem; }  // ~20px
+h6 { font-size: 1rem; }     // ~16px
+
+// Textos de parágrafo comuns
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+// Classes Utilitárias do estilo Bootstrap para textos secundários
+.text-muted {
+  color: $secondary !important; // Usa a sua cor --muted
+}
+
+.text-danger {
+  color: $danger !important;    // Usa a sua cor --coral para avisos/erros
+}
+
+.text-accent {
+  color: $accent !important;    // Usa a sua cor --lime para pequenos destaques
+}

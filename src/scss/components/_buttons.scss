@@ -1,0 +1,22 @@
+// Controles compartilhados; variacoes especificas ficam nos componentes.
+.btn {
+	display: inline-flex;
+	min-height: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	gap: .5rem;
+	padding: 0 .875rem;
+	border: 1px solid transparent;
+	border-radius: .25rem;
+	font: inherit;
+	cursor: pointer;
+}
+
+.btn-primary {
+	background: $success;
+	color: #fff;
+}
+
+.btn-primary:hover {
+	background: darken($success, 7%);
+}

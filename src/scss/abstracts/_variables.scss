@@ -1,0 +1,22 @@
+// scss/abstracts/_variables.scss
+
+$ink:        #24332f;
+$paper:      #f5f6f1;
+$muted:      #77827c;
+$lime:       #d9e99a;
+$coral:      #db806c;
+
+// Mapeamento Semântico para o Angular
+$primary:     $ink;
+$body-bg:     $paper;
+$body-color:  $ink;
+$card-bg:     #ffffff;
+$border-color: #e6e9e1;
+$secondary:   $muted;
+$danger:      $coral;
+$accent:      $lime;
+
+// Cores de Sucesso/Entrada baseadas no design
+$success:     #2d715d;
+$success-bg:  #e8f5e9;
+$danger-bg:   #fde8e8;

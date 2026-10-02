@@ -1,0 +1,7 @@
+// Superficie neutra reutilizavel para paineis e conteudos agrupados.
+.card {
+	min-width: 0;
+	border: 1px solid $border-color;
+	border-radius: .375rem;
+	background: $card-bg;
+}

@@ -1,0 +1,42 @@
+//Estilos globais e resets
+// scss/base/_reboot.scss
+
+// Garante que o cálculo de largura/altura inclua bordas e paddings em todo o projeto
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// Limpa margens e paddings padrões e define a base do layout claro
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  
+  // Aplica as cores da sua paleta global
+  background-color: $body-bg; // --paper
+  color: $body-color;         // --ink
+  
+  // Suavização de fontes em telas de alta resolução
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Remove outline de links focados sem quebrar a acessibilidade
+a {
+  color: inherit;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Garante que imagens sejam responsivas por padrão
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
